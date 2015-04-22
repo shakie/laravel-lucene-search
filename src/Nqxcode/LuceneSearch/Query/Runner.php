@@ -62,7 +62,14 @@ class Runner
     {
         $totalCount = null;
 
-        $hits = $this->run($query);
+        $args = [];
+        $args[] = $query;
+        if (isset($options['sort'])) {
+            foreach ($options['sort'] as $sort) {
+                $args[] = $sort;
+            }
+        }
+        $hits = call_user_func_array([$this, 'run'], $args);
         $models = $this->search->config()->models($hits, $options, $totalCount);
         // Remember total number of results.
         $this->setCachedCount($query, $totalCount);

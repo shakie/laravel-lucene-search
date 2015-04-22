@@ -60,13 +60,17 @@ class Builder
      *
      * @return array
      */
-    public function get()
+    public function get(array $sort = null)
     {
         $options = [];
 
         if ($this->limit) {
             $options['limit'] = $this->limit;
             $options['offset'] = $this->offset;
+        }
+
+        if(!is_null($sort)) {
+            $options['sort'] = $sort;
         }
 
         $this->filter->applyFilters($this->query); // Modify query if filters were added.
