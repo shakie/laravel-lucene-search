@@ -1,10 +1,11 @@
-<?php  namespace Nqxcode\LuceneSearch\Console;
+<?php namespace Nqxcode\LuceneSearch\Console;
 
 use Illuminate\Console\Command;
 use Nqxcode\LuceneSearch\Search;
 
 use App;
 use Config;
+use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Output\NullOutput;
 
 class RebuildCommand extends Command
@@ -18,7 +19,7 @@ class RebuildCommand extends Command
             $this->output = new NullOutput;
         }
 
-        if (is_dir(Config::get('laravel-lucene-search::index.path'))) {
+        if (is_dir(Config::get('laravel-lucene-search.index.path'))) {
             $this->call('search:clear');
         }
 
@@ -36,23 +37,21 @@ class RebuildCommand extends Command
                 $count = count($all);
 
                 if ($count > 0) {
-                    /** @var \Symfony\Component\Console\Helper\ProgressBar $progress */
-                    $progress = $this->getHelperSet()->get('progress');
-                    $progress->start($this->getOutput(), $count);
+                    /** @var ProgressBar $progress */
+                    $progress = new ProgressBar($this->getOutput(), $count);
 
                     foreach ($all as $model) {
                         $search->update($model);
                         $progress->advance();
                     }
                     $progress->finish();
-
                 } else {
                     $this->comment(' No available models found. ');
                 }
             }
-            $this->info('Operation is fully complete!');
+            $this->info(PHP_EOL . 'Operation is fully complete!');
         } else {
-            $this->error('No models found in config.php file..');
+            $this->error('No models found in config file..');
         }
     }
 }

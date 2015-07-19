@@ -1,10 +1,9 @@
 <?php namespace tests\functional;
 
-use tests\TestCase;
 use ZendSearch\Lucene\Search\Query\Boolean;
 use ZendSearch\Lucene\Search\QueryParser;
-use Config;
 
+use Config;
 use Search;
 
 class SearchTest extends BaseTestCase
@@ -13,8 +12,8 @@ class SearchTest extends BaseTestCase
     {
         // Test search without analyser filters and stopwords.
 
-        Config::set('laravel-lucene-search::analyzer.filters', []);
-        Config::set('laravel-lucene-search::analyzer.stopwords', []);
+        Config::set('laravel-lucene-search.analyzer.filters', []);
+        Config::set('laravel-lucene-search.analyzer.stopwords', []);
 
         parent::configure();
     }

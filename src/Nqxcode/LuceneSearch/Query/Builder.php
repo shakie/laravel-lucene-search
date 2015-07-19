@@ -1,6 +1,6 @@
 <?php namespace Nqxcode\LuceneSearch\Query;
 
-use Illuminate\Pagination\Factory as PaginatorFactory;
+use Illuminate\Pagination\Paginator;
 use ZendSearch\Lucene\Search\Query\AbstractQuery;
 use ZendSearch\Lucene\Search\Query\Boolean as QueryBoolean;
 use Input;
@@ -99,28 +99,28 @@ class Builder
      * Execute the current query and return a paginator for the results.
      *
      * @param int $perPage
-     * @param \Closure $getCurrentPage
+     * @param callable|mixed $currentPage
      *
      * @return \Illuminate\Pagination\Paginator
      */
-    public function paginate($perPage = 25, \Closure $getCurrentPage = null)
+    public function paginate($perPage = 25, $currentPage = null)
     {
-        if (is_null($getCurrentPage)) {
-            $getCurrentPage = function () {
+        if (is_null($currentPage)) {
+            $currentPage = function () {
                 return Input::get('page', 1);
             };
         }
-        $page = intval($getCurrentPage());
+        $page = intval(is_callable($currentPage) ? $currentPage() : $currentPage);
 
         $this->limit($perPage, ($page - 1) * $perPage);
 
         $models = $this->get();
         $count = $this->count();
 
-        /** @var PaginatorFactory $paginator */
-        $paginator = App::make('paginator');
+        /** @var Paginator $paginator */
+	    $paginator = new Paginator($models, $count, $perPage);
 
-        return $paginator->make($models, $count, $perPage);
+	    return $paginator;
     }
 
     /**
@@ -237,8 +237,8 @@ class Builder
             $this->query = $query;
         } else {
             throw new \InvalidArgumentException(
-                "Argument 'query' must be a string or ZendSearch\\Lucene\\Search\\Query\\AbstractQuery instance " .
-                "or callable returning a string or ZendSearch\\Lucene\\Search\\Query\\AbstractQuery instance."
+                "Argument 'query' must be a string or " . AbstractQuery::class . " instance " .
+                "or callable returning a string or " . AbstractQuery::class . " instance."
             );
         }
 

@@ -1,13 +1,14 @@
-Laravel 4 Lucene search
+Laravel 5.1 Lucene search
 ==============
 
 [![Latest Stable Version](https://poser.pugx.org/nqxcode/laravel-lucene-search/v/stable.png)](https://packagist.org/packages/nqxcode/laravel-lucene-search)
 [![Latest Unstable Version](https://poser.pugx.org/nqxcode/laravel-lucene-search/v/unstable.png)](https://packagist.org/packages/nqxcode/laravel-lucene-search)
 [![License](https://poser.pugx.org/nqxcode/laravel-lucene-search/license.png)](https://packagist.org/packages/nqxcode/laravel-lucene-search)
 [![Build Status](https://travis-ci.org/nqxcode/laravel-lucene-search.svg?branch=master)](https://travis-ci.org/nqxcode/laravel-lucene-search)
+[![Coverage Status](https://img.shields.io/coveralls/nqxcode/laravel-lucene-search/master.svg?style=flat)](https://coveralls.io/r/nqxcode/laravel-lucene-search?branch=master)
 
 
-Laravel 4 package for full-text search over Eloquent models based on ZendSearch Lucene.
+Laravel 5.1 package for full-text search over Eloquent models based on ZendSearch Lucene.
 
 ## Installation
 
@@ -16,11 +17,8 @@ Require this package in your composer.json and run composer update:
 ```json
 {
 	"require": {
-        "nqxcode/laravel-lucene-search": "dev-master"
-	},
-	
-    "prefer-stable" : true,
-    "minimum-stability": "dev"
+        "nqxcode/laravel-lucene-search": "2.1.*"
+	}
 }
 ```
 
@@ -28,7 +26,7 @@ After updating composer, add the ServiceProvider to the providers array in `app/
 
 ```php
 'providers' => [
-	'Nqxcode\LuceneSearch\ServiceProvider',
+	Nqxcode\LuceneSearch\ServiceProvider::class,
 ],
 ```
 
@@ -36,14 +34,14 @@ If you want to use the facade to search, add this to your facades in `app/config
 
 ```php
 'aliases' => [
-	'Search' => 'Nqxcode\LuceneSearch\Facade',
+	'Search' => Nqxcode\LuceneSearch\Facade::class,
 ],
 ```
 ## Configuration 
 Publish the config file into your project by running:
 
 ```bash
-php artisan config:publish nqxcode/laravel-lucene-search
+php artisan vendor:publish --provider="Nqxcode\LuceneSearch\ServiceProvider"
 ```
 
 In published config file add descriptions for models which need to be indexed, for example:
@@ -53,13 +51,13 @@ In published config file add descriptions for models which need to be indexed, f
 	
 	// ...
 
-	'namespace\FirstModel' => [
+	namespace\FirstModel::class => [
 		'fields' => [
 			'name', 'full_description', // Fields for indexing.
 		]
 	],
 	
-	'namespace\SecondModel' => [
+	namespace\SecondModel::class => [
 		'fields' => [
 			'name', 'short_description', // Fields for indexing.
 		]
@@ -70,6 +68,48 @@ In published config file add descriptions for models which need to be indexed, f
 ],
 
 ```
+You can also index values of **optional fields** (dynamic fields). For enable indexing for optional fields:
+
+- In config for each necessary model add following option:
+```php
+        'optional_attributes' => true
+        
+        // or
+        
+        'optional_attributes' => [
+                'field' => 'custom_name' // with specifying of accessor name
+        ]
+```
+- In model add **special accessor**, that returns list of `field-name => field-value`.
+By default `getOptionalAttributesAttribute` accessor will be used.
+In case accessor name specified in config `getCustomNameAttribute` accessor will be used.
+
+Example:
+
+In config file:
+
+```php
+        namespace\FirstModel::class => [
+                'fields' => [
+                    'name', 'full_description', // Fixed fields for indexing.
+                ],
+
+                'optional_attributes' => true //  Enable indexing for dynamic fields
+        ],
+```
+
+In model add following accessor:
+
+```php
+        public function getOptionalAttributesAttribute()
+        {
+                return [
+                        'optional_attribute1' => "value1",
+                        'optional_attribute2' => "value2",
+                ];
+        }
+```
+
 By default the following filters are used by search:
 - Stemming filter for english/russian words,
 - Stopword filters for english/russian words.
@@ -80,7 +120,7 @@ This filters can be deleted or replaced with others.
 'analyzer' => [
     'filters' => [
     	// Default stemming filter.
-    	'Nqxcode\Stemming\TokenFilterEnRu',
+    	Nqxcode\Stemming\TokenFilterEnRu::class,
     ],
         
     // List of paths to files with stopwords. 
@@ -130,25 +170,19 @@ class Dummy extends Model implements Searchable
 ```
 
 ### Partial updating of search index
-For register models events (save/update/delete) `use Nqxcode\LuceneSearch\Model\Search` and call `registerEventsForSearchIndexUpdate` method of trait in `boot` method of model:
+For register of necessary events (save/update/delete) `use Nqxcode\LuceneSearch\Model\SearchTrait` in target model:
 
 ```php
 
     use Illuminate\Database\Eloquent\Model;
     use Nqxcode\LuceneSearch\Model\Searchable;
-    use Nqxcode\LuceneSearch\Model\Search as SearchTrait;
+    use Nqxcode\LuceneSearch\Model\SearchTrait;
 
     class Dummy extends Model implements Searchable
     {
         use SearchTrait;
     
         // ...
-        
-        public static function boot()
-        {
-    	    parent::boot();
-            self::registerEventsForSearchIndexUpdate();
-        }
     }
 
 ```
@@ -229,8 +263,9 @@ Highlighting of matches is available for any html fragment encoded in **utf-8** 
 Search::find('nearly all words must be highlighted')->get();
 $highlighted = Search::highlight('all words');
 
-// highlighted html: 
-// '<span class="highlight">all</span> <span class="highlight">words</span>'
+echo $highlighted;
+ 
+// Echo: <span class="highlight">all</span> <span class="highlight">words</span>
 ```
 ##
 ## License
