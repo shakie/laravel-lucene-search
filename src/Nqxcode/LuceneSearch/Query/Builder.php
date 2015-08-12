@@ -103,7 +103,7 @@ class Builder
      *
      * @return \Illuminate\Pagination\Paginator
      */
-    public function paginate($perPage = 25, \Closure $getCurrentPage = null)
+    public function paginate(array $sort, $perPage = 25, \Closure $getCurrentPage = null)
     {
         if (is_null($getCurrentPage)) {
             $getCurrentPage = function () {
@@ -114,7 +114,7 @@ class Builder
 
         $this->limit($perPage, ($page - 1) * $perPage);
 
-        $models = $this->get();
+        $models = $this->get($sort);
         $count = $this->count();
 
         /** @var PaginatorFactory $paginator */
